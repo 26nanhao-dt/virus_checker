@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virus Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap&subset=vietnamese" rel="stylesheet">
+    <style>
+        :root {
+            --panel: rgba(16, 24, 48, 0.88);
+            --panel-border: rgba(120, 140, 180, 0.2);
+            --text: #ebf2ff;
+            --muted: #94a3b8;
+            --accent: #32d296;
+            --accent-2: #7dd3fc;
+            --danger: #ff6b6b;
+            --warning: #ffd166;
+            --safe: #32d296;
+            --bg-soft: rgba(255, 255, 255, 0.03);
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Be Vietnam Pro", "Segoe UI", "Noto Sans", Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(50, 210, 150, 0.18), transparent 28%),
+                radial-gradient(circle at top right, rgba(125, 211, 252, 0.16), transparent 24%),
+                linear-gradient(135deg, #08101f 0%, #0c1224 45%, #12192e 100%);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .app {
+            width: min(920px, 100%);
+            background: var(--panel);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 32px 32px 16px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2rem, 5vw, 3rem);
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .content {
+            padding: 24px 32px 32px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            padding: 12px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent), #83f3c4);
+            color: #042113;
+            border-color: transparent;
+            font-weight: 700;
+        }
+
+        .tab {
+            display: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .tab.active { display: block; }
+
+        .input-group {
+            display: grid;
+            gap: 12px;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(5, 10, 22, 0.65);
+            color: var(--text);
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 1rem;
+        }
+
+        .action-btn {
+            width: fit-content;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent));
+            color: #04111f;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .action-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .result {
+            margin-top: 24px;
+            background: rgba(3, 8, 20, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .summary-card {
+            display: grid;
+            gap: 10px;
+            padding: 18px;
+            border-radius: 18px;
+            background: var(--bg-soft);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .result-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .status-banner {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .status-note {
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .loading-wrap {
+            margin-top: 10px;
+        }
+
+        .loading-text {
+            font-size: 0.92rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .loading-bar {
+            position: relative;
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .loading-bar::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 -35%;
+            width: 35%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, transparent, var(--accent-2), var(--accent), transparent);
+            animation: loading-slide 1.2s linear infinite;
+        }
+
+        @keyframes loading-slide {
+            from { left: -35%; }
+            to { left: 100%; }
+        }
+
+        .status-neutral { color: var(--accent-2); }
+        .status-safe { color: var(--safe); }
+        .status-warning { color: var(--warning); }
+        .status-danger { color: var(--danger); }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .meta {
+            display: grid;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .meta-item {
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            word-break: break-word;
+        }
+
+        .hidden { display: none; }
+
+        button, input { font-family: inherit; }
+        :focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        @media (prefers-reduced-motion: reduce) { .loading-bar::before { animation: none; } }
+
+        @media (max-width: 640px) {
+            .hero, .content {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .tab { padding: 18px; }
+            .action-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <section class="hero">
+            <h1>Virus Checker</h1>
+            <p>Quét URL hoặc file bằng Virus Checker và hiển thị kết quả gọn, dễ đọc.</p>
+        </section>
+
+        <section class="content">
+            <div class="tabs" role="tablist">
+                <button class="tab-btn active" role="tab" aria-selected="true" data-tab-btn="url">URL</button>
+                <button class="tab-btn" role="tab" aria-selected="false" data-tab-btn="file">File</button>
+            </div>
+
+            <section id="url" class="tab active">
+                <h3>Quét URL</h3>
+                <div class="input-group">
+                    <label class="sr-only" for="urlInput">Địa chỉ URL cần quét</label>
+                    <input id="urlInput" type="text" inputmode="url" autocomplete="off" maxlength="2048" placeholder="https://example.com">
+                    <button id="urlScanBtn" class="action-btn">Quét URL</button>
+                </div>
+            </section>
+
+            <section id="file" class="tab">
+                <h3>Quét file</h3>
+                <div class="input-group">
+                    <label class="sr-only" for="fileInput">Chọn file cần quét</label>
+                    <input id="fileInput" type="file">
+                    <button id="fileScanBtn" class="action-btn">Quét file</button>
+                </div>
+            </section>
+
+            <section class="result">
+                <div class="summary-card">
+                    <div class="result-label">Kết quả</div>
+                    <div id="status" class="status-banner status-neutral" role="status" aria-live="polite">Sẵn sàng quét.</div>
+                    <div id="statusNote" class="status-note">Nhập URL hoặc chọn file để bắt đầu.</div>
+                    <div id="loadingWrap" class="loading-wrap hidden">
+                        <div class="loading-text">Đang chờ Virus Checker phân tích...</div>
+                        <div class="loading-bar"></div>
+                    </div>
+                </div>
+
+                <div id="stats" class="stats hidden"></div>
+                <div id="meta" class="meta"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
